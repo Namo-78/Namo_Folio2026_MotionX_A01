@@ -309,9 +309,9 @@
                 </div>
             </div>
             <div class="flex justify-between items-center pt-2 border-t border-stone-200 dark:border-stone-800/50" id="bottom-controls">
-                <button id="about-btn" onclick="toggleAbout()" class="flex items-center gap-2 text-stone-400 dark:text-stone-600 hover:text-amber-500 dark:hover:text-amber-500 text-[9px] font-bold uppercase tracking-[0.2em] transition-colors px-2 py-2 group">
-                    <i class="ph ph-info text-lg group-hover:scale-110 transition-transform"></i>
-                    <span>ABOUT</span>
+                <button id="export-btn" onclick="exportPortfolio()" class="flex items-center gap-2 text-stone-400 dark:text-stone-600 hover:text-green-500 dark:hover:text-green-500 text-[9px] font-bold uppercase tracking-[0.2em] transition-colors px-2 py-2 group">
+                    <i class="ph ph-download-simple text-lg group-hover:scale-110 transition-transform"></i>
+                    <span>Export</span>
                 </button>
                 <button id="edit-toggle-btn" onclick="toggleEditMode()" class="flex items-center gap-2 text-stone-400 dark:text-stone-600 text-[9px] font-bold uppercase tracking-[0.2em] hover:text-amber-500 dark:hover:text-amber-500 transition-colors group">
                     <div id="edit-icon" class="w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 group-hover:bg-amber-500 transition-colors"></div>
@@ -586,6 +586,7 @@
         const CLOUD_NAME = "dlu8pmwuk";
         const UPLOAD_PRESET = "namo_folio_2025"; 
 
+        // --- APP DATA START ---
         const appData = {
             currentLang: 'th',
             currentTheme: 'dark',
@@ -632,6 +633,7 @@
                 { id: 3, title: "Cyberpunk Merc", title_en: "Cyberpunk Mercenary", type: "art", tools: ["Ps", "Blender"], color: "#0ea5e9", shape: "triangle", desc: "...", desc_en: "...", images: [] }
             ]
         };
+        // --- APP DATA END ---
 
         let skillChart, cropper, currentEditingItemId, isAddingNewItem = false, cropType = 'gallery';
         let currentModalImages = [], currentSlideIndex = 0, currentStatIconId = 0;
@@ -689,6 +691,42 @@
                 appData.i18n[appData.currentLang][key] = el.innerText;
                 saveData();
             }
+        }
+
+        function exportPortfolio() {
+            // Force View Mode for clean export
+            if (appData.isEditMode) toggleEditMode();
+
+            // Serialize current data
+            const json = JSON.stringify(appData, null, 4);
+
+            // Get current HTML
+            let htmlContent = document.documentElement.outerHTML;
+
+            // Replace the appData block
+            const markerStart = '// --- APP DATA START ---';
+            const markerEnd = '// --- APP DATA END ---';
+            
+            const startIndex = htmlContent.indexOf(markerStart);
+            const endIndex = htmlContent.indexOf(markerEnd);
+
+            if (startIndex !== -1 && endIndex !== -1) {
+                const pre = htmlContent.substring(0, startIndex + markerStart.length);
+                const post = htmlContent.substring(endIndex);
+                // We inject the new data right here
+                htmlContent = `${pre}\n        const appData = ${json};\n        ${post}`;
+            }
+
+            // Create Download
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html'; // Default name
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // --- CHART & SKILLS ---
