@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinematic Director Portfolio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Cropper.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Thai', 'sans-serif'],
+                    },
+                    colors: {
+                        stone: {
+                            850: '#1f1c1a', 
+                            900: '#1c1917', 
+                            950: '#0c0a09',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            450: '#f59e0b',
+                            500: '#f59e0b',
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 10px -1px rgba(0, 0, 0, 0.1)',
+                        'glow': '0 0 15px rgba(245, 158, 11, 0.3)',
+                    },
+                    borderRadius: {
+                        'sharp': '3px',
+                    },
+                    spacing: {
+                        'compact': '1.25rem',
+                    },
+                    lineHeight: {
+                        'tight-custom': '1.1',
+                    },
+                    fontSize: {
+                        'xxs': '0.65rem',
+                    },
+                    cursor: {
+                        'grab': 'grab',
+                        'grabbing': 'grabbing',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* FIX: Remove bottom scrollbar/frame */
+        body { overflow: hidden; } 
+        
+        /* Custom Scrollbar */
+        #main-content::-webkit-scrollbar, .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        #main-content::-webkit-scrollbar-track, .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        #main-content::-webkit-scrollbar-thumb, .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+        html.dark #main-content::-webkit-scrollbar-thumb, html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #525252; }
+        
+        /* Horizontal Scrollbar for Timeline */
+        #timeline-scroll-area::-webkit-scrollbar { height: 8px; }
+        #timeline-scroll-area::-webkit-scrollbar-track { background: transparent; }
+        #timeline-scroll-area::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        html.dark #timeline-scroll-area::-webkit-scrollbar-thumb { background: #525252; }
+
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        /* Edit Mode Outline */
+        .edit-mode .editable-text {
+            border: 1px dashed #f59e0b; 
+            border-radius: 3px;
+            background: rgba(245, 158, 11, 0.05);
+            transition: all 0.2s;
+            cursor: text;
+        }
+        .edit-mode .editable-text:hover, .edit-mode .editable-text:focus {
+            background: rgba(245, 158, 11, 0.15); 
+            outline: none;
+        }
+        
+        /* Ensure inputs in gallery are visible in edit mode */
+        .edit-mode .gallery-tag-edit { pointer-events: auto; cursor: text; }
+        
+        /* Gallery Controls (Edit Mode) */
+        .gallery-card-controls { display: none; }
+        .edit-mode .gallery-card-controls { display: flex; }
+        
+        /* Gallery Add Button */
+        #add-new-btn-container { display: none; }
+        .edit-mode #add-new-btn-container { display: flex; animation: fadeIn 0.3s; }
+        
+        /* Modal Add Image Button (Edit Mode Only) */
+        #modal-edit-controls { display: none; }
+        .edit-mode #modal-edit-controls { display: flex; }
+
+        /* Contact Controls (Edit Mode Only) */
+        .contact-controls { display: none; }
+        .edit-mode .contact-controls { display: flex; }
+        .edit-mode .contact-delete-btn { display: block; }
+        .contact-delete-btn { display: none; }
+
+        /* Gallery Edit Overlay */
+        .gallery-edit-overlay { display: none !important; background: rgba(0,0,0,0.7); backdrop-filter: blur(2px); }
+        body.edit-mode .group:hover .gallery-edit-overlay { display: flex !important; }
+        
+        /* Nav Button */
+        .nav-btn {
+            border-radius: 3px;
+            transition: all 0.2s ease-out;
+            position: relative;
+            background-color: #f5f5f4;
+            color: #78716c;
+        }
+        html.dark .nav-btn {
+            background-color: rgba(255, 255, 255, 0.03); 
+            color: #a8a29e;
+        }
+        .nav-btn:hover:not(.active) {
+            background-color: #e7e5e4; transform: translateX(3px); color: #1c1917;
+        }
+        html.dark .nav-btn:hover:not(.active) {
+            background-color: rgba(255,255,255,0.08); color: #e5e5e5;
+        }
+        html:not(.dark) .nav-btn.active {
+            background-color: #1c1917; color: white; box-shadow: 0 4px 8px -2px rgba(0,0,0,0.15); transform: scale(1.01);
+        }
+        html.dark .nav-btn.active {
+            background-color: white; color: #1c1917; box-shadow: 0 4px 8px -2px rgba(255,255,255,0.1); transform: scale(1.01);
+        }
+
+        #edit-toolbar {
+            transform: translateY(150%) translateX(-50%); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #edit-toolbar.visible { transform: translateY(0) translateX(-50%); }
+        
+        /* Range Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #f59e0b; margin-top: -6px; box-shadow: 0 0 5px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #44403c; border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+        
+        /* Utils */
+        .rounded-xl, .rounded-2xl, .rounded-lg, .rounded-md { border-radius: 3px !important; }
+        .rounded-full { border-radius: 9999px !important; }
+        .color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+        .color-swatch:hover { transform: scale(1.2); }
+        .color-swatch.active { border-color: white; }
+        
+        /* Dots */
+        .slider-dot { width: 6px; height: 6px; border-radius: 50%; background-color: rgba(255,255,255,0.3); margin: 0 3px; cursor: pointer; transition: all 0.3s; }
+        .slider-dot.active { background-color: #f59e0b; transform: scale(1.2); }
+
+        /* Portrait Edit Mode */
+        .portrait-overlay { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        body.edit-mode .portrait-wrapper:hover .portrait-overlay { opacity: 1; pointer-events: auto; }
+        body.edit-mode .portrait-wrapper { cursor: pointer; }
+        body.edit-mode .portrait-wrapper:hover .portrait-border { border-color: #f59e0b; }
+        
+        /* Stat Icon Hover: Only visible in Edit Mode */
+        .stat-edit-overlay { opacity: 0; pointer-events: none; }
+        body.edit-mode .stat-icon-wrapper:hover .stat-edit-overlay { opacity: 1; pointer-events: auto; }
+        body.edit-mode .stat-icon-wrapper { cursor: pointer; }
+
+        /* Skill Box Active State (from Chart Hover) */
+        .skill-box { transition: all 0.3s; border-left: 3px solid transparent; }
+        .skill-box.active { border-color: #f59e0b !important; background-color: rgba(245, 158, 11, 0.1) !important; transform: translateX(5px); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+        
+        /* Timeline Column Styles */
+        .timeline-col-controls { opacity: 0; transition: opacity 0.2s; }
+        body.edit-mode .timeline-column:hover .timeline-col-controls { opacity: 1; }
+        
+        .timeline-block-controls { opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+        body.edit-mode .timeline-block:hover .timeline-block-controls { opacity: 1; pointer-events: auto; }
+        
+        .timeline-insert-zone { 
+            height: 4px; background: transparent; transition: all 0.2s; cursor: pointer; position: relative; margin: 2px 0;
+        }
+        body.edit-mode .timeline-insert-zone:hover { background: #f59e0b; height: 12px; border-radius: 2px; }
+        body.edit-mode .timeline-insert-zone:hover::after {
+            content: '+'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            color: white; font-weight: bold; font-size: 10px;
+        }
+        
+        /* Insert Buttons Popup */
+        .insert-options {
+            display: none; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+            background: #292524; padding: 2px; border-radius: 4px; z-index: 20; gap: 2px;
+        }
+        .timeline-insert-zone:hover .insert-options { display: flex; }
+
+        /* Timeline Navigation - Vertical Bars */
+        #timeline-track { transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; }
+        .scroll-btn {
+            position: absolute; top: 50%; transform: translateY(-50%); z-index: 30;
+            width: 35px; height: 120px; /* Adjusted size */
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            color: #78716c; transition: all 0.2s; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.05);
+            /* Icon size adjustment */
+            font-size: 24px; 
+        }
+        .scroll-btn-left { left: 0; border-radius: 0 12px 12px 0; border-left: none; }
+        .scroll-btn-right { right: 0; border-radius: 12px 0 0 12px; border-right: none; }
+
+        .scroll-btn:hover { background: #f59e0b; color: white; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        html.dark .scroll-btn { background: rgba(30,30,30,0.4); color: #a8a29e; }
+        html.dark .scroll-btn:hover { background: #f59e0b; color: white; }
+        
+        /* No scrollbar utility */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#f3f4f6] text-stone-800 dark:bg-[#121212] dark:text-stone-200 font-sans transition-colors duration-300 overflow-hidden h-screen flex">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 h-full bg-white dark:bg-[#1c1917] flex flex-col shadow-xl z-20 transition-all duration-300 relative border-r border-stone-200 dark:border-[#2a2a2a]">
+        <div class="p-5 pb-2 text-center">
+            <h1 class="text-xl font-bold tracking-wider text-stone-900 dark:text-[#e5e5e5]">
+                <span class="editable-text">PORTFOLIO</span><span class="text-amber-500 editable-text">.APP</span>
+            </h1>
+            <p class="text-xs text-stone-500 mt-0.5 dark:text-stone-500 editable-text tracking-wide" data-i18n="subtitle" onblur="updateText(this)">สำหรับ โมชั่น เอ็กซ์ สตูดิโอ</p>
+        </div>
+
+        <div class="px-5 pb-6 border-b border-stone-100 dark:border-[#2a2a2a] flex flex-col items-center">
+            <div class="relative group mb-3 portrait-wrapper" onclick="triggerPortraitUpload()">
+                <div class="portrait-border w-[160px] h-[185px] bg-stone-200 dark:bg-stone-700 rounded-sharp overflow-hidden shadow-md flex items-center justify-center relative border border-stone-300 dark:border-stone-600 transition-colors">
+                    <img id="portrait-display" src="https://via.placeholder.com/160x185/333333/666666?text=PHOTO" class="w-full h-full object-cover">
+                    <div class="portrait-overlay absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[1px]">
+                        <i class="ph ph-camera text-white text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center w-full">
+                <!-- Added data-i18n and onblur for text persistence -->
+                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-200 leading-tight editable-text" onblur="updateText(this)" contenteditable="true" id="candidate-name" data-i18n="name">Candidate Name</h3>
+                <p class="text-xs text-stone-500 mt-1 editable-text" onblur="updateText(this)" contenteditable="true" id="candidate-role" data-i18n="role">Cinematic Director</p>
+                <div class="mt-2 flex gap-1 justify-center items-center">
+                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                     <span class="text-[10px] text-stone-400 font-bold uppercase tracking-wider" data-i18n="status_ready" onblur="updateText(this)">Available</span>
+                </div>
+            </div>
+            <input type="file" id="portrait-upload" class="hidden" accept="image/*" onchange="handlePortraitFile(event)">
+        </div>
+
+        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-2">
+            <!-- 1. My Gallery -->
+            <button onclick="navigate('gallery')" class="nav-btn active w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold" data-target="gallery">
+                <i class="ph ph-image text-lg"></i><span class="editable-text" data-i18n="nav_gallery" onblur="updateText(this)">My Gallery</span>
+            </button>
+            
+            <!-- 2. Me Intro (Renamed from Call me NAMO) -->
+            <button onclick="navigate('namo')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold" data-target="namo">
+                <i class="ph ph-user-circle text-lg"></i><span class="editable-text" data-i18n="nav_namo" onblur="updateText(this)">Me Intro</span>
+            </button>
+            
+            <!-- 3. Timeline -->
+            <button onclick="navigate('pipeline')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold" data-target="pipeline">
+                <i class="ph ph-clock-clockwise text-lg"></i><span class="editable-text" data-i18n="nav_pipeline" onblur="updateText(this)">Timeline</span>
+            </button>
+            
+            <!-- 4. Contact -->
+            <button onclick="navigate('contact')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold" data-target="contact">
+                <i class="ph ph-envelope-simple text-lg"></i><span class="editable-text" data-i18n="nav_contact" onblur="updateText(this)">ติดต่อ & สถานะ</span>
+            </button>
+        </nav>
+
+        <div class="p-4 bg-stone-50 dark:bg-[#151413] border-t border-stone-200 dark:border-[#2a2a2a] space-y-4"> 
+            <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-1.5">
+                    <div class="bg-stone-200 dark:bg-[#262626] p-0.5 rounded-sharp flex relative h-8 border border-stone-300 dark:border-stone-700">
+                        <div id="lang-indicator" class="absolute w-1/2 h-full top-0 left-0 bg-white dark:bg-stone-600 shadow-sm rounded-sharp transition-all duration-300 m-0 p-0 transform scale-90"></div>
+                        <button onclick="setLanguage('th')" class="flex-1 text-[10px] font-bold z-10 text-center transition-colors relative text-stone-800 dark:text-white" id="btn-th">TH</button>
+                        <button onclick="setLanguage('en')" class="flex-1 text-[10px] font-bold z-10 text-center transition-colors relative text-stone-800 dark:text-white" id="btn-en">EN</button>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <div class="bg-stone-200 dark:bg-[#262626] p-0.5 rounded-sharp flex relative h-8 border border-stone-300 dark:border-stone-700 cursor-pointer" onclick="toggleTheme()">
+                        <div id="theme-indicator" class="absolute w-1/2 h-full top-0 left-0 bg-white dark:bg-stone-600 shadow-sm rounded-sharp transition-all duration-300 m-0 p-0 transform scale-90 translate-x-full"></div>
+                         <div id="text-light" class="flex-1 text-[10px] font-bold z-10 text-center flex items-center justify-center transition-colors relative text-stone-800 dark:text-stone-500">Light</div>
+                         <div id="text-dark" class="flex-1 text-[10px] font-bold z-10 text-center flex items-center justify-center transition-colors relative text-stone-500 dark:text-white">Dark</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-stone-200 dark:border-stone-800/50" id="bottom-controls">
+                <button id="about-btn" onclick="toggleAbout()" class="flex items-center gap-2 text-stone-400 dark:text-stone-600 hover:text-amber-500 dark:hover:text-amber-500 text-[9px] font-bold uppercase tracking-[0.2em] transition-colors px-2 py-2 group">
+                    <i class="ph ph-info text-lg group-hover:scale-110 transition-transform"></i>
+                    <span>ABOUT</span>
+                </button>
+                <button id="edit-toggle-btn" onclick="toggleEditMode()" class="flex items-center gap-2 text-stone-400 dark:text-stone-600 text-[9px] font-bold uppercase tracking-[0.2em] hover:text-amber-500 dark:hover:text-amber-500 transition-colors group">
+                    <div id="edit-icon" class="w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 group-hover:bg-amber-500 transition-colors"></div>
+                    <span id="edit-text" class="editable-text" data-i18n="btn_edit" onblur="updateText(this)">Enable Edit Mode</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden bg-[#f3f4f6] dark:bg-[#121212] relative flex flex-col p-6 md:p-8">
+        
+        <!-- ME INTRO (Merged Dashboard + Skills) -->
+        <section id="namo" class="content-section hidden fade-in max-w-7xl mx-auto w-full">
+            
+            <!-- Part 1: SKILL SYNERGY (Moved to TOP) -->
+            <div class="flex justify-between items-start mb-3 border-b border-stone-200 dark:border-stone-800 pb-2">
+                <div>
+                    <h2 class="text-xl font-bold text-stone-800 dark:text-[#e5e5e5] mb-0.5 editable-text" data-i18n="skill_header" onblur="updateText(this)">ผสานทักษะ</h2>
+                    <p class="text-xs text-stone-500 editable-text" data-i18n="skill_subheader" onblur="updateText(this)">แสดงจุดแข็งของการเป็นลูกผสม (Hybrid)</p>
+                </div>
+            </div>
+            
+            <div id="skill-editor" class="hidden bg-stone-100 dark:bg-stone-900/80 p-3 rounded-sharp mb-4 border border-amber-500/30 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                        <i class="ph ph-sliders-horizontal text-lg"></i> Adjust Skill Levels (1-10)
+                    </h4>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4" id="skill-sliders"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+                <!-- Chart (Left - Size Increased 30% + 20%) -->
+                <div class="lg:col-span-2 bg-white dark:bg-[#1e1e1e] rounded-sharp p-3 shadow-soft flex flex-col items-center justify-center relative border border-stone-100 dark:border-[#2a2a2a]">
+                    <div class="w-full h-[360px]"><canvas id="skillChart"></canvas></div>
+                </div>
+                
+                <!-- Text Boxes (Right - 5 Boxes) -->
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div id="skill-box-0" class="skill-box bg-white dark:bg-[#1e1e1e] p-3 rounded-sharp shadow-soft border border-stone-100 dark:border-[#2a2a2a] flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300" onmouseenter="highlightChart(0)" onmouseleave="unhighlightChart()">
+                        <h4 class="font-bold text-xs text-amber-500 uppercase tracking-wider editable-text" data-i18n="skill_1_title" onblur="updateText(this)">Future Problem Solving (การจัดการปัญหา)</h4>
+                        <p class="text-xs text-stone-500 leading-tight-custom editable-text" data-i18n="skill_1_desc" onblur="updateText(this)">เน้นการแก้ไขปัญหาเฉพาะหน้า...</p>
+                    </div>
+                    <div id="skill-box-1" class="skill-box bg-white dark:bg-[#1e1e1e] p-3 rounded-sharp shadow-soft border border-stone-100 dark:border-[#2a2a2a] flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300" onmouseenter="highlightChart(1)" onmouseleave="unhighlightChart()">
+                        <h4 class="font-bold text-xs text-amber-500 uppercase tracking-wider editable-text" data-i18n="skill_2_title" onblur="updateText(this)">Art/Design (ศิลปะและการออกแบบ)</h4>
+                        <p class="text-xs text-stone-500 leading-tight-custom editable-text" data-i18n="skill_2_desc" onblur="updateText(this)">การออกแบบที่เน้นความสวยงาม...</p>
+                    </div>
+                    <div id="skill-box-2" class="skill-box bg-white dark:bg-[#1e1e1e] p-3 rounded-sharp shadow-soft border border-stone-100 dark:border-[#2a2a2a] flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300" onmouseenter="highlightChart(2)" onmouseleave="unhighlightChart()">
+                        <h4 class="font-bold text-xs text-amber-500 uppercase tracking-wider editable-text" data-i18n="skill_5_title" onblur="updateText(this)">Communication (การสื่อสาร)</h4>
+                        <p class="text-xs text-stone-500 leading-tight-custom editable-text" data-i18n="skill_5_desc" onblur="updateText(this)">การสื่อสารที่ชัดเจนและตรงประเด็น...</p>
+                    </div>
+                    <div id="skill-box-3" class="skill-box bg-white dark:bg-[#1e1e1e] p-3 rounded-sharp shadow-soft border border-stone-100 dark:border-[#2a2a2a] flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300" onmouseenter="highlightChart(3)" onmouseleave="unhighlightChart()">
+                        <h4 class="font-bold text-xs text-amber-500 uppercase tracking-wider editable-text" data-i18n="skill_4_title" onblur="updateText(this)">Teamwork (การทำงานเป็นทีม)</h4>
+                        <p class="text-xs text-stone-500 leading-tight-custom editable-text" data-i18n="skill_4_desc" onblur="updateText(this)">การประสานงานกับทีมต่างๆ...</p>
+                    </div>
+                    <div id="skill-box-4" class="skill-box bg-white dark:bg-[#1e1e1e] p-3 rounded-sharp shadow-soft border border-stone-100 dark:border-[#2a2a2a] flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300" onmouseenter="highlightChart(4)" onmouseleave="unhighlightChart()">
+                        <h4 class="font-bold text-xs text-amber-500 uppercase tracking-wider editable-text" data-i18n="skill_3_title" onblur="updateText(this)">Ai/Tech (เอไอ/เทคโนโลยี)</h4>
+                        <p class="text-xs text-stone-500 leading-tight-custom editable-text" data-i18n="skill_3_desc" onblur="updateText(this)">การนำ AI มาประยุกต์ใช้...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Part 2: OVERVIEW -->
+            <div class="bg-white dark:bg-[#1e1e1e] rounded-sharp p-5 shadow-soft relative overflow-hidden border border-stone-100 dark:border-[#2a2a2a] mb-6">
+                <div class="flex flex-col lg:flex-row gap-5">
+                    <div class="flex-1 flex flex-col justify-start">
+                        <h2 class="text-xl font-bold mb-2 text-stone-900 dark:text-[#e5e5e5] editable-text leading-tight w-full border-b border-stone-100 dark:border-stone-800 pb-2" data-i18n="main_title" onblur="updateText(this)">
+                            เชื่อมโยงการแสดง<br>และงานดีไซน์
+                        </h2>
+                        <p class="text-stone-600 dark:text-stone-400 mb-0 leading-tight-custom text-xs editable-text pr-2 font-medium" data-i18n="main_desc" onblur="updateText(this)">
+                            ในฐานะผู้สมัครตำแหน่ง Cinematic Director สำหรับ Motion X Studio ผมนำเสนอรูปแบบการทำงานแบบลูกผสม...
+                        </p>
+                    </div>
+                    <div class="w-full lg:w-1/3 flex flex-col gap-2 justify-center min-w-[200px] border-t lg:border-t-0 lg:border-l border-stone-100 dark:border-stone-800 pt-3 lg:pt-0 lg:pl-5">
+                        <!-- Stats 1-3 -->
+                        <div class="flex items-center gap-3 group p-1.5 hover:bg-stone-50 dark:hover:bg-stone-800/50 rounded-sharp transition-colors">
+                            <div class="w-9 h-9 rounded-sharp bg-stone-200 dark:bg-stone-700 flex items-center justify-center overflow-hidden stat-icon-wrapper relative" onclick="triggerStatIconUpload(1)">
+                                <img id="stat-icon-1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'%3E%3Cpath d='M21,14a1,1,0,0,0-1,1v3a1,1,0,0,1-1,1H5a1,1,0,0,1-1-1V15a1,1,0,0,0-2,0v3a3,3,0,0,0,3,3H19a3,3,0,0,0,3-3V15A1,1,0,0,0,21,14Zm-9-6a1,1,0,0,0,1,1h4.59L15.3,11.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l3-3a1,1,0,0,0,0-1.42l-3-3a1,1,0,0,0-1.42,1.42L17.59,9H13A1,1,0,0,0,12,8Z'/%3E%3C/svg%3E" class="w-full h-full object-cover">
+                                <div class="stat-edit-overlay absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 transition-opacity"><i class="ph ph-pencil text-white text-xs"></i></div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-stone-900 dark:text-[#e5e5e5] editable-text leading-none">15+</h4>
+                                <p class="text-[9px] text-stone-500 font-bold uppercase tracking-wider editable-text mt-0.5" data-i18n="stat_1" onblur="updateText(this)">กำกับ Cinematics</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 group p-1.5 hover:bg-stone-50 dark:hover:bg-stone-800/50 rounded-sharp transition-colors">
+                            <div class="w-9 h-9 rounded-sharp bg-stone-200 dark:bg-stone-700 flex items-center justify-center overflow-hidden stat-icon-wrapper relative" onclick="triggerStatIconUpload(2)">
+                                <img id="stat-icon-2" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M20,19H4a1,1,0,0,1-1-1V6A1,1,0,0,1,4,5H20a1,1,0,0,1,1,1V18A1,1,0,0,1,20,19ZM5,7V17H19V7Z'/%3E%3C/svg%3E" class="w-full h-full object-cover">
+                                <div class="stat-edit-overlay absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 transition-opacity"><i class="ph ph-pencil text-white text-xs"></i></div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-stone-900 dark:text-[#e5e5e5] editable-text leading-none">200+</h4>
+                                <p class="text-[9px] text-stone-500 font-bold uppercase tracking-wider editable-text mt-0.5" data-i18n="stat_2" onblur="updateText(this)">เขียน Storyboards</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 group p-1.5 hover:bg-stone-50 dark:hover:bg-stone-800/50 rounded-sharp transition-colors">
+                            <div class="w-9 h-9 rounded-sharp bg-stone-200 dark:bg-stone-700 flex items-center justify-center overflow-hidden stat-icon-wrapper relative" onclick="triggerStatIconUpload(3)">
+                                <img id="stat-icon-3" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a855f7'%3E%3Cpath d='M12,12a4,4,0,1,0-4-4A4,4,0,0,0,12,12Zm0-6a2,2,0,1,1-2,2A2,2,0,0,1,12,6Zm6,11a1,1,0,0,0-1-1H7a1,1,0,0,0-1,1v3a1,1,0,0,0,2,0V18h8v2a1,1,0,0,0,2,0Z'/%3E%3C/svg%3E" class="w-full h-full object-cover">
+                                <div class="stat-edit-overlay absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 transition-opacity"><i class="ph ph-pencil text-white text-xs"></i></div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-stone-900 dark:text-[#e5e5e5] editable-text leading-none">4 yrs</h4>
+                                <p class="text-[9px] text-stone-500 font-bold uppercase tracking-wider editable-text mt-0.5" data-i18n="stat_3" onblur="updateText(this)">ประสบการณ์นำทีม</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- TIMELINE (Column Based) -->
+        <section id="pipeline" class="content-section hidden fade-in w-full h-full relative overflow-hidden flex flex-col bg-[#f3f4f6] dark:bg-[#121212]">
+            <div class="p-6 pb-2 flex justify-between items-center relative z-10">
+                 <h2 class="text-xl font-bold text-stone-800 dark:text-[#e5e5e5] editable-text" data-i18n="nav_pipeline" onblur="updateText(this)">ประวัติโดยย่อ</h2>
+            </div>
+            
+            <!-- Navigation Buttons - VERTICAL BARS -->
+            <div onclick="scrollTimeline(-1)" class="scroll-btn scroll-btn-left group">
+                <i class="ph ph-caret-left"></i>
+            </div>
+            <div onclick="scrollTimeline(1)" class="scroll-btn scroll-btn-right group">
+                <i class="ph ph-caret-right"></i>
+            </div>
+
+            <div id="timeline-scroll-container" class="flex-1 overflow-x-auto overflow-y-hidden relative no-scrollbar" onwheel="handleTimelineWheel(event)">
+                <div id="timeline-track" class="flex gap-6 px-16 pb-6 h-full min-w-max"> 
+                    <!-- Columns rendered here -->
+                </div>
+            </div>
+            
+            <div id="timeline-global-controls" class="absolute bottom-6 right-6 hidden z-20">
+                <button onclick="addTimelineColumn()" class="bg-amber-500 hover:bg-amber-600 text-white rounded-full p-4 shadow-lg shadow-amber-500/30 transform hover:scale-110 transition-all">
+                    <i class="ph ph-columns text-xl"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- MY GALLERY -->
+        <section id="gallery" class="content-section fade-in max-w-7xl mx-auto w-full">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-stone-800 dark:text-[#e5e5e5] mb-1 editable-text" data-i18n="gallery_title" onblur="updateText(this)">ผลงาน</h2>
+                    <p class="text-xs text-stone-500 font-medium editable-text" data-i18n="gallery_subtitle" onblur="updateText(this)">กรองตามประเภทงานเพื่อดูตัวอย่าง</p>
+                </div>
+                <!-- Filter Pills -->
+                <div class="flex gap-2 bg-stone-200/50 dark:bg-[#1e1e1e] p-1 rounded-sharp backdrop-blur-sm">
+                    <button class="filter-btn active px-4 py-1.5 rounded-sharp text-[9px] font-bold bg-white text-stone-900 shadow-sm transition-all hover:scale-105 dark:text-stone-900" onclick="setGalleryFilter('all')" data-i18n="filter_all">All</button>
+                    <button class="filter-btn px-4 py-1.5 rounded-sharp text-[9px] font-bold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all hover:scale-105" onclick="setGalleryFilter('movie')" data-i18n="filter_movie">Movie&Series</button>
+                    <button class="filter-btn px-4 py-1.5 rounded-sharp text-[9px] font-bold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all hover:scale-105" onclick="setGalleryFilter('online')" data-i18n="filter_online">Online Media</button>
+                    <button class="filter-btn px-4 py-1.5 rounded-sharp text-[9px] font-bold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all hover:scale-105" onclick="setGalleryFilter('art')" data-i18n="filter_art">Art&Design</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="gallery-grid"></div>
+            
+            <div class="justify-center mt-8 hidden" id="add-new-btn-container">
+                <button onclick="triggerNewItemUpload()" class="flex items-center gap-2 text-[10px] font-bold text-amber-500 hover:text-white transition-all uppercase tracking-widest border border-amber-500/30 px-6 py-2.5 rounded-sharp hover:bg-amber-500 hover:shadow-glow hover:scale-105 transform duration-300">
+                    <i class="ph ph-plus text-sm"></i> <span data-i18n="btn_add_more">เพิ่มงานใหม่</span>
+                </button>
+                <input type="file" id="new-item-upload" class="hidden" accept="image/*" onchange="handleNewItemFile(event)">
+            </div>
+        </section>
+
+        <!-- CONTACT -->
+        <section id="contact" class="content-section hidden fade-in max-w-7xl mx-auto w-full">
+            <h2 class="text-xl font-bold mb-6 text-stone-800 dark:text-[#e5e5e5] editable-text" data-i18n="contact_title" onblur="updateText(this)">Contact</h2>
+            <div class="bg-white dark:bg-[#1e1e1e] p-8 rounded-sharp border border-stone-100 dark:border-[#2a2a2a] shadow-soft max-w-2xl">
+                <h3 class="text-lg font-bold text-stone-900 dark:text-white mb-2 editable-text" data-i18n="contact_h1" onblur="updateText(this)">Let's Create Together</h3>
+                <p class="text-xs text-stone-500 mb-6 editable-text" data-i18n="contact_desc" onblur="updateText(this)">Ready to bring visual stability...</p>
+                <div class="space-y-5" id="contact-container">
+                    <div class="group relative contact-item">
+                        <label class="text-[9px] uppercase font-bold text-stone-400 tracking-wider block mb-1 editable-text">EMAIL</label>
+                        <div class="text-stone-800 dark:text-stone-200 font-mono text-xs pb-1.5 border-b border-stone-200 dark:border-stone-700 editable-text">candidate@email.com</div>
+                        <button onclick="deleteContact(this)" class="contact-delete-btn absolute right-0 top-0 text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button>
+                    </div>
+                </div>
+                <div class="mt-6 contact-controls justify-center">
+                    <button onclick="addContact()" class="text-amber-500 hover:text-amber-600 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border border-amber-500/30 px-4 py-2 rounded-sharp hover:bg-amber-500/10 transition-all">
+                        <i class="ph ph-plus"></i> Add Info
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- FLOATING TOOLBAR -->
+    <div id="edit-toolbar" class="fixed bottom-8 left-1/2 bg-[#1f1c1a] text-white z-50 px-5 py-2.5 rounded-sharp border border-stone-700 shadow-2xl flex items-center gap-5 shadow-glow">
+        <div class="flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-stone-400 border-r border-stone-600 pr-5">TEXT TOOLS</div>
+        <div class="flex items-center gap-1">
+            <button onmousedown="event.preventDefault(); formatText('bold')" class="p-1.5 hover:bg-stone-700 rounded-sharp text-stone-300 hover:text-white transition-colors"><i class="ph ph-text-b text-lg"></i></button>
+            <button onmousedown="event.preventDefault(); formatText('italic')" class="p-1.5 hover:bg-stone-700 rounded-sharp text-stone-300 hover:text-white transition-colors"><i class="ph ph-text-italic text-lg"></i></button>
+            <button onmousedown="event.preventDefault(); formatText('underline')" class="p-1.5 hover:bg-stone-700 rounded-sharp text-stone-300 hover:text-white transition-colors"><i class="ph ph-text-u text-lg"></i></button>
+        </div>
+        <div class="h-6 w-px bg-stone-700"></div>
+        <div class="flex items-center gap-1">
+            <button onmousedown="event.preventDefault(); setTextSize('xs')" class="p-1.5 hover:bg-stone-700 rounded-sharp text-stone-300 hover:text-white text-[9px] font-bold">XS</button>
+            <button onmousedown="event.preventDefault(); setTextSize('sm')" class="p-1.5 hover:bg-stone-700 rounded-sharp text-stone-300 hover:text-white text-[10px] font-bold">S</button>
+            <button onmousedown="event.preventDefault(); setTextSize('base')" class="p-1.5 hover:bg-stone-700 rounded-sharp text-stone-300 hover:text-white text-xs font-bold">M</button>
+        </div>
+        <div class="h-6 w-px bg-stone-700"></div>
+        <div class="flex items-center gap-2">
+            <div onmousedown="event.preventDefault(); setTextColor('#ffffff')" class="color-swatch bg-white active"></div>
+            <div onmousedown="event.preventDefault(); setTextColor('#a8a29e')" class="color-swatch bg-stone-400"></div>
+            <div onmousedown="event.preventDefault(); setTextColor('#f59e0b')" class="color-swatch bg-amber-500"></div>
+            <div onmousedown="event.preventDefault(); setTextColor('#0ea5e9')" class="color-swatch bg-sky-500"></div>
+        </div>
+        <div class="ml-2">
+             <button onclick="toggleEditMode()" class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-1.5 rounded-sharp font-bold text-[10px] shadow-lg shadow-amber-500/20 hover:scale-105 transition-all">Done</button>
+        </div>
+    </div>
+
+    <!-- GALLERY MODAL -->
+    <div id="gallery-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-[#1c1917] w-full max-w-6xl h-[85vh] rounded-sharp overflow-hidden flex flex-col md:flex-row relative shadow-2xl">
+            <button onclick="closeModal()" class="absolute top-4 right-4 z-50 text-stone-500 hover:text-amber-500 bg-white/10 p-2 rounded-full backdrop-blur-md transition-colors"><i class="ph ph-x text-2xl"></i></button>
+            <div class="w-full md:w-2/3 h-1/2 md:h-full bg-black flex items-center justify-center p-4 relative group">
+                <img id="modal-image" src="" class="max-w-full max-h-full object-contain shadow-2xl">
+                <button onclick="changeSlide(-1)" id="modal-prev-btn" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-all hidden"><i class="ph ph-caret-left text-2xl"></i></button>
+                <button onclick="changeSlide(1)" id="modal-next-btn" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-all hidden"><i class="ph ph-caret-right text-2xl"></i></button>
+                <div id="modal-dots" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center"></div>
+                <div id="modal-edit-controls" class="absolute top-4 left-4 flex flex-col gap-2">
+                    <button onclick="saveModalChanges()" class="bg-green-500 text-white px-4 py-2 rounded-sharp font-bold text-[10px] shadow-lg hover:bg-green-600 hover:scale-105 transition-all flex items-center gap-2 mb-2"><i class="ph ph-floppy-disk text-sm"></i> Save Changes</button>
+                    <button onclick="triggerGalleryAdd()" class="bg-amber-500 text-white px-4 py-2 rounded-sharp font-bold text-[10px] shadow-lg hover:scale-105 transition-transform flex items-center gap-2"><i class="ph ph-plus-circle text-sm"></i> Add Image (Max 12)</button>
+                    <div class="flex gap-1">
+                        <button onclick="moveImage(-1)" class="bg-stone-700 hover:bg-stone-600 text-white p-2 rounded-sharp shadow-lg"><i class="ph ph-caret-left"></i></button>
+                        <button onclick="deleteImage()" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-sharp shadow-lg"><i class="ph ph-trash"></i></button>
+                        <button onclick="moveImage(1)" class="bg-stone-700 hover:bg-stone-600 text-white p-2 rounded-sharp shadow-lg"><i class="ph ph-caret-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full md:w-1/3 h-1/2 md:h-full bg-white dark:bg-[#1c1917] p-8 flex flex-col border-l border-stone-200 dark:border-stone-800 overflow-hidden">
+                <div class="mb-6 flex-shrink-0">
+                    <span id="modal-tag" class="px-3 py-1 rounded-sharp text-[10px] font-bold uppercase tracking-wider text-white bg-amber-500 inline-block mb-3">CATEGORY</span>
+                    <h2 id="modal-title" class="text-3xl font-bold text-stone-900 dark:text-white mb-2 leading-tight editable-text" oninput="updateItemData(currentEditingItemId, 'title', this.innerText)">Project Title</h2>
+                    <!-- RESTORED: Tools Container -->
+                    <div id="modal-tools" class="flex flex-wrap gap-2 mt-2"></div>
+                </div>
+                <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <p id="modal-desc" class="text-stone-600 dark:text-stone-400 text-sm leading-tight-custom whitespace-pre-line text-justify editable-text" oninput="updateItemData(currentEditingItemId, 'desc', this.innerText)"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABOUT POPUP & CROPPER -->
+    <div id="about-popup" class="fixed inset-0 z-[70] hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-6" onclick="toggleAbout()">
+        <div class="bg-white dark:bg-[#1c1917] p-6 rounded-sharp shadow-2xl max-w-sm w-full border border-stone-200 dark:border-[#2a2a2a] relative transform scale-95 opacity-0 transition-all duration-300" id="about-content" onclick="event.stopPropagation()">
+            <button onclick="toggleAbout()" class="absolute top-3 right-3 text-stone-400 hover:text-stone-900 dark:hover:text-white"><i class="ph ph-x text-lg"></i></button>
+            <h3 class="text-sm font-bold text-amber-500 mb-3 uppercase tracking-wider editable-text">About This App</h3>
+            <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed text-justify editable-text">This portfolio app demonstrates advanced front-end capabilities...</p>
+        </div>
+    </div>
+    <div id="cropper-modal" class="fixed inset-0 z-[60] hidden bg-[#0c0a09]/95 backdrop-blur-md flex flex-col justify-center items-center">
+        <div class="w-full max-w-5xl h-[80vh] flex flex-col bg-[#1c1917] rounded-sharp overflow-hidden shadow-2xl border border-stone-800">
+             <div class="flex justify-between items-center p-4 border-b border-stone-800 bg-[#151413]">
+                <h3 class="text-white font-bold text-xs uppercase tracking-wider">Crop Image</h3>
+                <button onclick="closeCropper()" class="text-stone-500 hover:text-white transition-colors"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            <div class="flex-1 bg-[#0c0a09] relative flex items-center justify-center overflow-hidden p-6"><img id="cropper-image" class="block max-w-full max-h-full mx-auto"></div>
+            <div class="p-4 bg-[#151413] border-t border-stone-800 flex justify-end gap-3">
+                <button onclick="closeCropper()" class="px-5 py-2 rounded-sharp text-stone-500 hover:text-white text-[10px] font-bold transition-colors">Cancel</button>
+                <button onclick="saveCrop()" class="px-6 py-2 rounded-sharp bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold shadow-lg flex items-center gap-2 transition-all hover:scale-105"><i class="ph ph-crop"></i> Crop & Save</button>
+            </div>
+        </div>
+        <input type="file" id="gallery-upload-input" class="hidden" accept="image/*">
+    </div>
+
+    <script>
+        // --- 1. ตั้งค่า Cloudinary ---
+        const CLOUD_NAME = "dlu8pmwuk";
+        const UPLOAD_PRESET = "namo_folio_2025"; 
+
+        const appData = {
+            currentLang: 'th',
+            currentTheme: 'dark',
+            isEditMode: false,
+            currentGalleryFilter: 'all',
+            profileImage: null, // เพิ่ม Field สำหรับเก็บรูปโปรไฟล์
+            chartData: [9, 8.5, 9, 8, 8], 
+            chartLabels: ['Future Problem Solving', 'Art/Design', 'Communication', 'Teamwork', 'Ai/Tech'],
+            timelineColumns: [
+                { id: 1, title: "2018 - Start", title_en: "2018 - Start", blocks: [{type: 'text', value: "Started career as junior animator.", value_en: "Started career as junior animator."}, {type: 'image', src: "https://via.placeholder.com/200x150"}] },
+                { id: 2, title: "2020 - Lead", title_en: "2020 - Lead", blocks: [{type: 'text', value: "Promoted to Team Lead.", value_en: "Promoted to Team Lead."}, {type: 'text', value: "Managed 5 artists.", value_en: "Managed 5 artists."}] },
+                { id: 3, title: "2022 - Award", title_en: "2022 - Award", blocks: [{type: 'image', src: "https://via.placeholder.com/200x150"}, {type: 'text', value: "Won Regional Best Director.", value_en: "Won Regional Best Director."}] },
+                { id: 4, title: "2024 - Senior", title_en: "2024 - Senior", blocks: [{type: 'text', value: "Senior Director at Major Studio.", value_en: "Senior Director at Major Studio."}] }
+            ],
+            i18n: {
+                th: {
+                    name: "Candidate Name", role: "Cinematic Director", contact_h1: "Let's Create Together", contact_desc: "Ready to bring visual stability...",
+                    subtitle: "สำหรับ โมชั่น เอ็กซ์ สตูดิโอ", label_lang: "ภาษา", label_mode: "โหมดแสดงผล", 
+                    nav_namo: "แนะนำตัว", nav_skills: "ผสานทักษะ", nav_pipeline: "ประวัติโดยย่อ", nav_gallery: "ผลงาน", nav_contact: "ติดต่อ",
+                    status_ready: "พร้อมเริ่มงาน", dash_header: "ภาพรวม", dash_subheader: "วิเคราะห์ความเหมาะสม", main_title: "เชื่อมโยงการแสดง<br>และงานดีไซน์",
+                    main_desc: "รูปแบบการทำงานแบบลูกผสม...", btn_portfolio: "ดูผลงาน", btn_process: "ดูกระบวนการ", stat_1: "กำกับ Cinematics", stat_2: "เขียน Storyboards", stat_3: "ประสบการณ์นำทีม",
+                    about_title: "เกี่ยวกับเว็บแอพนี้", about_desc: "แสดงความสามารถในการจัดการข้อมูล...", skill_header: "ผสานทักษะ", skill_subheader: "จุดแข็งของการเป็นลูกผสม",
+                    skill_1_title: "Future Problem Solving", skill_1_desc: "เน้นการแก้ไขปัญหาเฉพาะหน้า...", skill_2_title: "Art/Design", skill_2_desc: "การออกแบบที่เน้นความสวยงาม...",
+                    skill_3_title: "Communication", skill_3_desc: "การสื่อสารที่ชัดเจน...", skill_4_title: "Teamwork", skill_4_desc: "การประสานงานกับทีม...", skill_5_title: "Ai/Tech", skill_5_desc: "การนำ AI มาประยุกต์ใช้...",
+                    gallery_title: "ผลงาน", gallery_subtitle: "ตัวอย่างงาน", filter_all: "ทั้งหมด", filter_movie: "Movie&Series", filter_online: "Online Media", filter_art: "Art&Design",
+                    btn_edit: "แก้ไข", contact_title: "ติดต่อ"
+                },
+                en: {
+                    name: "Candidate Name", role: "Cinematic Director", contact_h1: "Let's Create Together", contact_desc: "Ready to bring visual stability...",
+                    subtitle: "For Motion X Studio", label_lang: "LANGUAGE", label_mode: "APPEARANCE", 
+                    nav_namo: "Me Intro", nav_skills: "Skills", nav_pipeline: "Timeline", nav_gallery: "My Gallery", nav_contact: "Contact",
+                    status_ready: "Available", dash_header: "Overview", dash_subheader: "Fit Analysis", main_title: "Bridging Performance<br>& Design",
+                    main_desc: "Unique hybrid workflow...", btn_portfolio: "Portfolio", btn_process: "Process", stat_1: "Cinematics", stat_2: "Storyboards", stat_3: "Leadership",
+                    about_title: "About This App", about_desc: "Demonstrates data organization skills...", skill_header: "Skill Synergy", skill_subheader: "The Hybrid Advantage",
+                    skill_1_title: "Future Problem Solving", skill_1_desc: "Focus on immediate solutions...", skill_2_title: "Art/Design", skill_2_desc: "Aesthetic and functional design...",
+                    skill_3_title: "Communication", skill_3_desc: "Clear and concise communication...", skill_4_title: "Teamwork", skill_4_desc: "Effective coordination...", skill_5_title: "Ai/Tech", skill_5_desc: "Integrating AI...",
+                    gallery_title: "My Gallery", gallery_subtitle: "Selected Works", filter_all: "All", filter_movie: "Movie&Series", filter_online: "Online Media", filter_art: "Art&Design",
+                    btn_edit: "Edit Mode", contact_title: "Contact"
+                }
+            },
+            gallery: [
+                { id: 1, title: "Tactical Reload", title_en: "Tactical Reload (FPS)", type: "movie", tools: ["Ps", "Procreate"], color: "#f59e0b", shape: "grid", desc: "...", desc_en: "...", images: [] },
+                { id: 2, title: "NPC Emotive State", title_en: "NPC Emotive State", type: "online", tools: ["Sony", "Pr"], color: "#78716c", shape: "circle", desc: "...", desc_en: "...", images: [] },
+                { id: 3, title: "Cyberpunk Merc", title_en: "Cyberpunk Mercenary", type: "art", tools: ["Ps", "Blender"], color: "#0ea5e9", shape: "triangle", desc: "...", desc_en: "...", images: [] }
+            ]
+        };
+
+        let skillChart, cropper, currentEditingItemId, isAddingNewItem = false, cropType = 'gallery';
+        let currentModalImages = [], currentSlideIndex = 0, currentStatIconId = 0;
+        let editingTimelineColId = null, editingTimelineBlockIdx = null, timelineScrollPos = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            initChart();
+            renderGallery('all');
+            navigate('gallery'); 
+            generateSkillSliders(); 
+            renderTimeline();
+            
+             document.getElementById('gallery-upload-input').addEventListener('change', (e) => { if (e.target.files[0]) startCropper(e.target.files[0]); e.target.value = ''; });
+             document.getElementById('new-item-upload').addEventListener('change', (e) => { if (e.target.files[0]) startCropper(e.target.files[0]); e.target.value = ''; });
+             document.getElementById('portrait-upload').addEventListener('change', handlePortraitFile);
+        });
+
+        function saveData() { 
+            try {
+                localStorage.setItem('portfolioData', JSON.stringify(appData));
+            } catch (e) {
+                console.warn("Storage full", e);
+            }
+        }
+        function loadData() {
+            const data = localStorage.getItem('portfolioData');
+            if(data) {
+                const parsed = JSON.parse(data);
+                
+                // Merge data carefully to avoid overwriting new structure with old
+                if(parsed.i18n) {
+                    if(!parsed.i18n.th.name) parsed.i18n.th.name = "Candidate Name";
+                    if(!parsed.i18n.en.name) parsed.i18n.en.name = "Candidate Name";
+                    // Ensure deep merge or assignment for i18n
+                    appData.i18n = { ...appData.i18n, ...parsed.i18n };
+                }
+                
+                Object.assign(appData, parsed);
+                
+                // Restore Profile Image
+                if(appData.profileImage) {
+                    document.getElementById('portrait-display').src = appData.profileImage;
+                }
+                
+                // Force language update to sync text
+                setLanguage(appData.currentLang);
+            }
+        }
+
+        // --- NEW: Function to update text in i18n object based on current language ---
+        function updateText(el) {
+            const key = el.getAttribute('data-i18n');
+            if(key) {
+                appData.i18n[appData.currentLang][key] = el.innerText;
+                saveData();
+            }
+        }
+
+        // --- CHART & SKILLS ---
+        function initChart() {
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#a8a29e';
+            skillChart = new Chart(ctx, {
+                type: 'radar',
+                data: { labels: appData.chartLabels, datasets: [{ label: 'My Profile', data: appData.chartData, backgroundColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', pointBackgroundColor: '#1c1917', pointBorderColor: '#f59e0b', borderWidth: 2, pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#f59e0b', pointHitRadius: 75 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 10, ticks: { display: false }, angleLines: { color: 'rgba(120,113,108,0.2)' }, grid: { color: 'rgba(120,113,108,0.2)', circular: true }, pointLabels: { font: { size: 9, weight: 'bold' }, color: '#78716c' } } }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, onHover: (e, el) => { document.querySelectorAll('.skill-box').forEach(b => b.classList.remove('active')); if(el.length) document.getElementById(`skill-box-${el[0].index}`)?.classList.add('active'); } }
+            });
+        }
+        function highlightChart(i) { if(skillChart) { skillChart.setActiveElements([{ datasetIndex: 0, index: i }]); skillChart.update(); } }
+        function unhighlightChart() { if(skillChart) { skillChart.setActiveElements([]); skillChart.update(); } }
+        function updateChartData(idx, val) { appData.chartData[idx] = parseFloat(val); skillChart.data.datasets[0].data = appData.chartData; skillChart.update(); saveData(); }
+        function generateSkillSliders() {
+            const c = document.getElementById('skill-sliders'); c.innerHTML = '';
+            appData.chartLabels.forEach((l, i) => { c.innerHTML += `<div class="flex flex-col gap-1.5"><div class="flex justify-between text-xs text-stone-400 font-bold uppercase tracking-wide"><span>${l}</span><span class="text-amber-500 font-bold">${appData.chartData[i]}</span></div><input type="range" min="1" max="10" step="0.5" value="${appData.chartData[i]}" class="w-full h-1 bg-stone-700 rounded-lg appearance-none cursor-pointer" oninput="updateChartData(${i}, this.value)"></div>`; });
+        }
+
+        // --- TIMELINE ---
+        function handleTimelineWheel(e) {
+            if (!e.shiftKey) { 
+                e.preventDefault();
+                const container = document.getElementById('timeline-scroll-container');
+                container.scrollLeft += e.deltaY;
+            }
+        }
+        function scrollTimeline(dir) {
+            const container = document.getElementById('timeline-scroll-container');
+            const scrollAmount = 300; 
+            container.scrollBy({ left: dir * scrollAmount, behavior: 'smooth' });
+        }
+        function renderTimeline() {
+            const track = document.getElementById('timeline-track');
+            track.innerHTML = '';
+            appData.timelineColumns.forEach((col, i) => {
+                let blocksHtml = '';
+                col.blocks.forEach((b, bi) => {
+                    if(appData.isEditMode) blocksHtml += `<div class="timeline-insert-zone group/insert"><div class="insert-options hidden group-hover/insert:flex"><button onclick="addTimelineBlock(${col.id},${bi},'text')" class="bg-stone-700 text-white text-[9px] px-1 rounded hover:bg-amber-500">+T</button><button onclick="addTimelineBlock(${col.id},${bi},'image')" class="bg-stone-700 text-white text-[9px] px-1 rounded hover:bg-amber-500">+I</button></div></div>`;
+                    
+                    // Logic to show text based on current language
+                    let contentValue = b.value;
+                    if(appData.currentLang === 'en' && b.value_en) contentValue = b.value_en;
+                    
+                    const content = b.type === 'text' ? `<div class="text-xs text-stone-600 dark:text-stone-400 bg-stone-50 dark:bg-stone-800/50 p-2 rounded-sharp editable-text" ${appData.isEditMode ? 'contenteditable="true"' : ''} onblur="updateTimelineText(${col.id},${bi},this.innerText)">${contentValue}</div>` : `<div class="w-full bg-stone-200 dark:bg-stone-800 rounded-sharp overflow-hidden relative" style="aspect-ratio: 1.85/1;"><img src="${b.src}" class="w-full h-full object-cover cursor-pointer hover:opacity-80" onclick="triggerTimelineBlockImage(${col.id},${bi})"></div>`;
+                    const controls = appData.isEditMode ? `<div class="timeline-block-controls absolute top-1 right-1 flex gap-1 bg-white/90 dark:bg-black/90 rounded-sharp p-1 shadow-sm z-10"><button onclick="moveTimelineBlock(${col.id},${bi},-1)" class="text-stone-500 hover:text-stone-900"><i class="ph ph-caret-up"></i></button><button onclick="deleteTimelineBlock(${col.id},${bi})" class="text-red-500 hover:text-red-700"><i class="ph ph-trash"></i></button><button onclick="moveTimelineBlock(${col.id},${bi},1)" class="text-stone-500 hover:text-stone-900"><i class="ph ph-caret-down"></i></button></div>` : '';
+                    blocksHtml += `<div class="timeline-block relative group/block mb-2">${content}${controls}</div>`;
+                });
+                if(appData.isEditMode) blocksHtml += `<div class="mt-2 flex gap-2 justify-center border-t border-stone-100 dark:border-stone-800 pt-2"><button onclick="addTimelineBlock(${col.id},${col.blocks.length},'text')" class="text-[10px] bg-stone-100 hover:bg-amber-500 hover:text-white px-3 py-1 rounded-sharp">+ Text</button><button onclick="addTimelineBlock(${col.id},${col.blocks.length},'image')" class="text-[10px] bg-stone-100 hover:bg-amber-500 hover:text-white px-3 py-1 rounded-sharp">+ Image</button></div>`;
+                
+                // Logic for column header language
+                let headerTitle = col.title;
+                if(appData.currentLang === 'en' && col.title_en) headerTitle = col.title_en;
+
+                const colHtml = `<div class="timeline-column shrink-0 w-64 bg-white dark:bg-[#1e1e1e] rounded-sharp border border-stone-200 dark:border-[#2a2a2a] flex flex-col p-4 relative group"><div class="flex justify-between items-start mb-3 border-b border-stone-100 dark:border-stone-800 pb-2"><div class="flex-1"><span class="text-xs font-bold text-amber-500">${i+1}.</span><h3 class="text-sm font-bold text-stone-900 dark:text-stone-200 editable-text" ${appData.isEditMode?'contenteditable="true"':''} onblur="updateTimelineHeader(${col.id},this.innerText)">${headerTitle}</h3></div><div class="timeline-col-controls flex gap-1 ${appData.isEditMode?'':'hidden'}"><button onclick="moveTimelineColumn(${i},-1)" class="text-stone-400 hover:text-stone-600"><i class="ph ph-caret-left"></i></button><button onclick="deleteTimelineColumn(${col.id})" class="text-red-400 hover:text-red-600"><i class="ph ph-trash"></i></button><button onclick="moveTimelineColumn(${i},1)" class="text-stone-400 hover:text-stone-600"><i class="ph ph-caret-right"></i></button></div></div><div class="flex-1 overflow-y-auto custom-scrollbar">${blocksHtml}</div></div>`;
+                track.innerHTML += colHtml;
+            });
+            document.getElementById('timeline-global-controls').style.display = appData.isEditMode ? 'block' : 'none';
+        }
+        function addTimelineColumn() { appData.timelineColumns.push({ id: Date.now(), title: "New Stage", title_en: "New Stage", blocks: [{type: 'text', value: "...", value_en: "..."}] }); renderTimeline(); saveData(); }
+        function deleteTimelineColumn(id) { if(confirm("Delete column?")) { appData.timelineColumns = appData.timelineColumns.filter(c => c.id !== id); renderTimeline(); saveData(); } }
+        function moveTimelineColumn(i, dir) { const ni = i + dir; if (ni >= 0 && ni < appData.timelineColumns.length) { [appData.timelineColumns[i], appData.timelineColumns[ni]] = [appData.timelineColumns[ni], appData.timelineColumns[i]]; renderTimeline(); saveData(); } }
+        function updateTimelineHeader(id, val) { 
+            const c = appData.timelineColumns.find(c => c.id === id); 
+            if(c) {
+                if(appData.currentLang === 'en') c.title_en = val;
+                else c.title = val;
+            }
+            saveData(); 
+        }
+        function addTimelineBlock(cid, idx, type) { const c = appData.timelineColumns.find(c => c.id === cid); if(c) { c.blocks.splice(idx, 0, type==='text'?{type:'text',value:"New Text", value_en:"New Text"}:{type:'image',src:"https://via.placeholder.com/200x150"}); renderTimeline(); saveData(); if(type==='image') triggerTimelineBlockImage(cid, idx); } }
+        function deleteTimelineBlock(cid, idx) { const c = appData.timelineColumns.find(c => c.id === cid); if(c) { c.blocks.splice(idx, 1); renderTimeline(); saveData(); } }
+        function moveTimelineBlock(cid, idx, dir) { const c = appData.timelineColumns.find(c => c.id === cid); if(c && idx+dir >= 0 && idx+dir < c.blocks.length) { [c.blocks[idx], c.blocks[idx+dir]] = [c.blocks[idx+dir], c.blocks[idx]]; renderTimeline(); saveData(); } }
+        function updateTimelineText(cid, idx, val) { 
+            const c = appData.timelineColumns.find(c => c.id === cid); 
+            if(c) {
+                if(appData.currentLang === 'en') c.blocks[idx].value_en = val;
+                else c.blocks[idx].value = val;
+            }
+            saveData(); 
+        }
+        function triggerTimelineBlockImage(cid, idx) { if(!appData.isEditMode) return; editingTimelineColId = cid; editingTimelineBlockIdx = idx; cropType = 'timeline_block'; document.getElementById('gallery-upload-input').click(); }
+
+        // --- GALLERY ---
+        function renderGallery(filter = 'all') {
+            const grid = document.getElementById('gallery-grid'); grid.innerHTML = '';
+            const items = filter === 'all' ? appData.gallery : appData.gallery.filter(i => i.type === filter);
+            items.forEach(item => {
+                const thumb = item.images && item.images.length > 0 ? item.images[0] : (item.image || null);
+                const media = thumb ? `<img src="${thumb}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">` : `<canvas id="thumb-${item.id}" class="w-full h-full object-cover"></canvas>`;
+                const edit = `<div class="gallery-card-controls absolute top-2 right-2 gap-1 z-30"><button onclick="event.stopPropagation();moveCard(${item.id},-1)" class="bg-stone-800 text-white p-1.5 rounded-full"><i class="ph ph-caret-left"></i></button><button onclick="event.stopPropagation();deleteCard(${item.id})" class="bg-red-500 text-white p-1.5 rounded-full"><i class="ph ph-trash"></i></button><button onclick="event.stopPropagation();moveCard(${item.id},1)" class="bg-stone-800 text-white p-1.5 rounded-full"><i class="ph ph-caret-right"></i></button></div>`;
+                const tools = (item.tools||[]).map((t,i) => `<span class="text-[9px] bg-stone-100 dark:bg-[#2a2a2a] text-stone-600 dark:text-stone-400 px-1.5 py-0.5 rounded-sharp font-medium gallery-tag-edit ${appData.isEditMode?'editable-text':''}" ${appData.isEditMode?'contenteditable="true"':''} onblur="updateTool(${item.id},${i},this.innerText)">${t}</span>`).join('');
+                
+                // FIX: Use title/desc based on current language
+                const title = (appData.currentLang === 'en' && item.title_en) ? item.title_en : item.title;
+                const desc = (appData.currentLang === 'en' && item.desc_en) ? item.desc_en : item.desc;
+
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-[#1e1e1e] rounded-sharp overflow-hidden border border-stone-100 dark:border-[#2a2a2a] group relative flex flex-col h-full hover:border-amber-500 hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer';
+                card.onclick = (e) => { if(e.target.closest('.gallery-card-controls') || (appData.isEditMode && e.target.classList.contains('editable-text'))) return; openModal(item.id); };
+                
+                // FIX: Fixed aspect ratio container (aspect-video) to prevent stretching on GitHub
+                card.innerHTML = `<div class="relative w-full aspect-video bg-stone-100 dark:bg-stone-900 overflow-hidden">${media}${edit}</div><div class="p-4 flex-1 flex flex-col"><h4 class="font-bold text-stone-900 dark:text-stone-200 mb-1.5 text-sm editable-text" ${appData.isEditMode?'contenteditable="true"':''} onblur="updateItemData(${item.id},'title',this.innerText)">${title}</h4><p class="text-[12px] text-stone-600 dark:text-stone-400 mb-3 flex-1 editable-text line-clamp-2" ${appData.isEditMode?'contenteditable="true"':''} onblur="updateItemData(${item.id},'desc',this.innerText)">${desc}</p><div class="flex gap-2 mt-auto flex-wrap">${tools}</div></div>`;
+                grid.appendChild(card);
+                if(!thumb) setTimeout(() => drawAbstractThumbnail(`thumb-${item.id}`, 'rect', '#f59e0b'), 0);
+            });
+        }
+        function updateTool(id, idx, val) { const i = appData.gallery.find(x => x.id === id); if(i && i.tools) i.tools[idx] = val; saveData(); }
+        function updateItemData(id, f, val) { 
+            const i = appData.gallery.find(x => x.id === id); 
+            if(i) {
+                // Update specific language field
+                if (f === 'title' && appData.currentLang === 'en') i.title_en = val;
+                else if (f === 'desc' && appData.currentLang === 'en') i.desc_en = val;
+                else i[f] = val;
+            }
+            saveData(); 
+        }
+        function deleteCard(id) { if(confirm("Delete?")) { appData.gallery = appData.gallery.filter(x => x.id !== id); renderGallery(appData.currentGalleryFilter); saveData(); } }
+        function moveCard(id, dir) { 
+            const list = appData.gallery; const idx = list.findIndex(x => x.id === id); 
+            if(idx !== -1 && idx+dir >= 0 && idx+dir < list.length) { [list[idx], list[idx+dir]] = [list[idx+dir], list[idx]]; renderGallery(appData.currentGalleryFilter); saveData(); }
+        }
+        function drawAbstractThumbnail(id, shape, color) {
+            const c = document.getElementById(id); if(!c) return; const ctx = c.getContext('2d');
+            c.width = 300; c.height = 200; ctx.fillStyle = '#1c1917'; ctx.fillRect(0,0,300,200); ctx.fillStyle = color;
+            ctx.fillRect(100, 50, 100, 100); // Simple rect fallback
+        }
+
+        // --- MODAL ---
+        function openModal(id) {
+            currentEditingItemId = id; const item = appData.gallery.find(i => i.id === id); if(!item) return;
+            const m = document.getElementById('gallery-modal');
+            
+            const title = (appData.currentLang === 'en' && item.title_en) ? item.title_en : item.title;
+            const desc = (appData.currentLang === 'en' && item.desc_en) ? item.desc_en : item.desc;
+
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('modal-title').contentEditable = appData.isEditMode;
+            document.getElementById('modal-desc').contentEditable = appData.isEditMode;
+            
+            // Restore Tools in Modal
+            const toolsContainer = document.getElementById('modal-tools');
+            toolsContainer.innerHTML = (item.tools || []).map((t, idx) => 
+                `<span class="text-xs border border-stone-300 dark:border-stone-700 px-2 py-1 rounded-sharp text-stone-600 dark:text-stone-400 font-bold ${appData.isEditMode ? 'editable-text' : ''}" ${appData.isEditMode ? 'contenteditable="true"' : ''} onblur="updateTool(${item.id}, ${idx}, this.innerText)">${t}</span>`
+            ).join('');
+
+            currentModalImages = item.images?.length ? item.images : (item.image ? [item.image] : []);
+            if(!currentModalImages.length) { const c = document.getElementById(`thumb-${id}`); if(c) currentModalImages.push(c.toDataURL()); }
+            currentSlideIndex = 0; updateModalImage();
+            m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10);
+        }
+        function closeModal() { const m = document.getElementById('gallery-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); renderGallery(appData.currentGalleryFilter); }
+        function updateModalImage() {
+            const img = document.getElementById('modal-image');
+            if(currentModalImages.length) { img.src = currentModalImages[currentSlideIndex]; img.classList.remove('hidden'); } else { img.classList.add('hidden'); }
+            
+            // Generate Dots
+            const dots = document.getElementById('modal-dots');
+            dots.innerHTML = '';
+            if (currentModalImages.length > 1) {
+                currentModalImages.forEach((_, i) => {
+                    const d = document.createElement('div');
+                    d.className = `slider-dot ${i===currentSlideIndex?'active':''}`;
+                    d.onclick = () => { currentSlideIndex = i; updateModalImage(); };
+                    dots.appendChild(d);
+                });
+                document.getElementById('modal-prev-btn').classList.remove('hidden');
+                document.getElementById('modal-next-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('modal-prev-btn').classList.add('hidden');
+                document.getElementById('modal-next-btn').classList.add('hidden');
+            }
+
+            const ctrls = document.getElementById('modal-edit-controls'); ctrls.style.display = appData.isEditMode ? 'flex' : 'none';
+        }
+        function changeSlide(dir) { currentSlideIndex += dir; if(currentSlideIndex >= currentModalImages.length) currentSlideIndex=0; if(currentSlideIndex < 0) currentSlideIndex = currentModalImages.length-1; updateModalImage(); }
+        function saveModalChanges() { closeModal(); saveData(); }
+        function triggerGalleryAdd() { if(currentModalImages.length >= 12) return alert('Max 12'); cropType = 'gallery_add'; document.getElementById('gallery-upload-input').click(); }
+        function deleteImage() { if(!currentModalImages.length) return; currentModalImages.splice(currentSlideIndex, 1); const i = appData.gallery.find(x => x.id === currentEditingItemId); if(i) { i.images = [...currentModalImages]; if(i.images.length) i.image = i.images[0]; } updateModalImage(); saveData(); }
+        function moveImage(dir) { if(currentModalImages.length <= 1) return; const n = currentSlideIndex + dir; if(n >= 0 && n < currentModalImages.length) { [currentModalImages[currentSlideIndex], currentModalImages[n]] = [currentModalImages[n], currentModalImages[currentSlideIndex]]; currentSlideIndex = n; const i = appData.gallery.find(x => x.id === currentEditingItemId); if(i) i.images = [...currentModalImages]; updateModalImage(); saveData(); } }
+
+        // --- CORE ---
+        function navigate(id) { 
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`button[data-target="${id}"]`).classList.add('active');
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            const t = document.getElementById(id); t.classList.remove('hidden', 'fade-in'); void t.offsetWidth; t.classList.add('fade-in');
+        }
+        function toggleEditMode() {
+            appData.isEditMode = !appData.isEditMode;
+            document.body.classList.toggle('edit-mode', appData.isEditMode);
+            const tb = document.getElementById('edit-toolbar'); appData.isEditMode ? tb.classList.add('visible') : tb.classList.remove('visible');
+            const btn = document.getElementById('edit-toggle-btn');
+            if(appData.isEditMode) { 
+                btn.innerHTML = '<i class="ph ph-check-circle text-sm"></i> Save'; btn.className = "w-full flex items-center justify-center gap-2 py-2.5 rounded-sharp bg-amber-500 text-white text-[9px] font-bold uppercase tracking-wider shadow-lg hover:scale-105 transition-all";
+                document.getElementById('skill-editor').classList.remove('hidden');
+            } else { 
+                btn.innerHTML = '<div id="edit-icon" class="w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 group-hover:bg-amber-500 transition-colors"></div><span class="editable-text" data-i18n="btn_edit" onblur="updateText(this)">Edit Mode</span>'; 
+                btn.className = "flex items-center gap-2 text-stone-400 dark:text-stone-600 text-[9px] font-bold uppercase tracking-[0.2em] hover:text-amber-500 transition-colors group";
+                document.getElementById('skill-editor').classList.add('hidden');
+            }
+            document.querySelectorAll('.editable-text').forEach(e => { e.contentEditable = appData.isEditMode; });
+            renderGallery(appData.currentGalleryFilter); renderTimeline(); saveData();
+        }
+        function setGalleryFilter(f) { appData.currentGalleryFilter = f; renderGallery(f); }
+        function setLanguage(l) { 
+            appData.currentLang = l; 
+            document.getElementById('lang-indicator').style.transform = l==='en'?'translateX(100%) scale(0.9)':'translateX(0) scale(0.9)'; 
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(appData.i18n[l][key]) {
+                    // Check if element has child span (like buttons) or direct text
+                    if(el.querySelector('span')) el.querySelector('span').innerText = appData.i18n[l][key];
+                    else el.innerText = appData.i18n[l][key];
+                }
+            });
+            renderGallery(appData.currentGalleryFilter); renderTimeline(); 
+        }
+        function toggleTheme() { 
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-indicator').style.transform = isDark ? 'translateX(100%) scale(0.9)' : 'translateX(0) scale(0.9)';
+            
+            const lightText = document.getElementById('text-light');
+            const darkText = document.getElementById('text-dark');
+            
+            if(isDark) {
+                lightText.classList.replace('text-stone-800', 'text-stone-500');
+                darkText.classList.replace('text-stone-500', 'text-white');
+            } else {
+                lightText.classList.replace('text-stone-500', 'text-stone-800');
+                darkText.classList.replace('text-white', 'text-stone-500');
+            }
+        }
+        function toggleAbout() { 
+            const popup = document.getElementById('about-popup');
+            const content = document.getElementById('about-content');
+            if(popup.classList.contains('hidden')) {
+                popup.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            } else {
+                content.classList.remove('scale-100', 'opacity-100');
+                content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => popup.classList.add('hidden'), 300);
+            }
+        }
+        
+        // --- UPLOAD ---
+        function triggerPortraitUpload() { 
+            if(!appData.isEditMode) return; 
+            cropType = 'portrait'; 
+            document.getElementById('portrait-upload').click(); 
+        }
+        function triggerStatIconUpload(id) { if(!appData.isEditMode) return; currentStatIconId = id; cropType = 'stat_icon'; document.getElementById('gallery-upload-input').click(); }
+        function triggerNewItemUpload() { cropType = 'gallery'; isAddingNewItem = true; document.getElementById('new-item-upload').click(); }
+        function handlePortraitFile(e) { if(e.target.files[0]) startCropper(e.target.files[0]); e.target.value = ''; }
+        
+        function handleNewItemFile(e) {
+            if(e.target.files[0]) {
+                cropType = 'gallery';
+                isAddingNewItem = true;
+                startCropper(e.target.files[0]);
+            }
+            e.target.value = '';
+        }
+
+        function startCropper(f) {
+            const r = new FileReader(); r.onload = e => { 
+                document.getElementById('cropper-image').src = e.target.result; document.getElementById('cropper-modal').classList.remove('hidden');
+                if(cropper) cropper.destroy(); 
+                let ar = 1.5; 
+                if(cropType === 'portrait') ar = 160/185; 
+                if(cropType === 'stat_icon') ar = 1; 
+                if(cropType === 'timeline_block') ar = 1.85;
+                if(cropType === 'gallery' || cropType === 'gallery_add') ar = 16/9; // Default gallery AR
+                cropper = new Cropper(document.getElementById('cropper-image'), { aspectRatio: ar, viewMode: 1 });
+            }; r.readAsDataURL(f);
+        }
+        function closeCropper() { document.getElementById('cropper-modal').classList.add('hidden'); if(cropper) cropper.destroy(); }
+        
+        // --- 2. ฟังก์ชันช่วยอัปโหลด ---
+        async function uploadToCloudinary(blob) {
+            const formData = new FormData();
+            formData.append('file', blob);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            
+            // ส่งรูปไป Cloudinary
+            try {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                return data.secure_url; // คืนค่าเป็น Link รูป (https://...)
+            } catch (err) {
+                console.error("Upload Error:", err);
+                alert("อัปโหลดไม่สำเร็จ เช็ค Internet หรือ Cloud Name");
+                return null;
+            }
+        }
+
+        // --- 3. ฟังก์ชัน Save Crop แบบใหม่ (Crop -> Upload -> Get Link) ---
+        function saveCrop() {
+            if(!cropper) return;
+
+            // เปลี่ยนปุ่มเป็นสถานะ "กำลังอัปโหลด..."
+            const btn = document.querySelector("button[onclick='saveCrop()']");
+            const oldText = btn.innerHTML;
+            btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i> Uploading...`; 
+            btn.disabled = true;
+
+            // สั่ง Cropper ให้แปลงภาพเป็นไฟล์ (Blob)
+            cropper.getCroppedCanvas({ 
+                maxWidth: 1200, 
+                maxHeight: 1200, 
+                fillColor: '#fff' 
+            }).toBlob(async (blob) => {
+                
+                // ส่งไฟล์ที่ Crop แล้วขึ้น Cloudinary
+                const url = await uploadToCloudinary(blob);
+
+                if (url) {
+                    // ถ้าได้ลิงก์กลับมา ให้เอาลิงก์ไปแปะตามจุดต่างๆ (เหมือนโค้ดเดิม)
+                    if(cropType === 'portrait') {
+                        document.getElementById('portrait-display').src = url;
+                        appData.profileImage = url; // Save to App Data
+                    }
+                    else if(cropType === 'stat_icon') document.getElementById(`stat-icon-${currentStatIconId}`).src = url;
+                    else if(cropType === 'timeline_block') { 
+                        const c = appData.timelineColumns.find(x => x.id === editingTimelineColId); 
+                        if(c && c.blocks[editingTimelineBlockIdx]) { 
+                            c.blocks[editingTimelineBlockIdx].src = url; 
+                            renderTimeline(); 
+                        } 
+                    }
+                    else if(cropType === 'gallery_add') { 
+                        currentModalImages.push(url); 
+                        currentSlideIndex = currentModalImages.length-1; 
+                        updateModalImage(); 
+                        const i = appData.gallery.find(x=>x.id===currentEditingItemId); 
+                        if(i) i.images = [...currentModalImages]; 
+                        renderGallery(appData.currentGalleryFilter); 
+                    }
+                    else if(cropType === 'gallery') { 
+                        appData.gallery.unshift({
+                            id: Date.now(), 
+                            title: "New Work", 
+                            title_en: "New Work",
+                            desc: "...", 
+                            desc_en: "...",
+                            type: appData.currentGalleryFilter==='all'?'art':appData.currentGalleryFilter, 
+                            images:[url], 
+                            tools:['Tool']
+                        }); 
+                        renderGallery(appData.currentGalleryFilter); 
+                    }
+                    
+                    // บันทึกข้อมูล (ตอนนี้ใน JSON จะเก็บเป็นลิงก์สั้นๆ แล้ว ไม่ใช่ Base64 ยาวๆ)
+                    saveData(); 
+                    closeCropper();
+                }
+
+                // คืนค่าปุ่มให้เหมือนเดิม
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+
+            }, 'image/jpeg', 0.95); // บีบอัดภาพเหลือคุณภาพ 95%
+        }
+        
+        function formatText(cmd) { document.execCommand(cmd, false, null); }
+        function setTextSize(s) { document.execCommand('styleWithCSS',false,true); document.execCommand('fontSize',false, s==='xs'?'1':'3'); }
+        function setTextColor(c) { document.execCommand('styleWithCSS',false,true); document.execCommand('foreColor',false,c); }
+        function addContact() { document.getElementById('contact-container').innerHTML += `<div class="group relative contact-item"><label class="text-[9px] uppercase font-bold text-stone-400 tracking-wider block mb-1 editable-text" contenteditable="true">LABEL</label><div class="text-stone-800 dark:text-stone-200 font-mono text-xs pb-1.5 border-b border-stone-200 dark:border-stone-700 editable-text" contenteditable="true">Info...</div><button onclick="this.closest('.contact-item').remove(); saveData();" class="contact-delete-btn absolute right-0 top-0 text-red-500 hover:text-red-700 p-1"><i class="ph ph-trash"></i></button></div>`; saveData(); }
+        function deleteContact(e) { e.closest('.contact-item').remove(); saveData(); }
+    </script>
+</body>
+</html>
